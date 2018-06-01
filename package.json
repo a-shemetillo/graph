@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "d3": "^5.4.0",
     "data-net": "^4.0.3",
     "husky": "^0.14.3",
     "immutability-helper": "^2.7.0",
