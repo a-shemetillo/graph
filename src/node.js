@@ -18,7 +18,11 @@ export default class Node extends React.Component {
   }
 
   onDrop = event => {
-    console.log(111);
+    const { left, top } = event.target.style;
+    this.props.onChangeNodeData(this.props.id, {
+      x: parseFloat(left),
+      y: parseFloat(top)
+    });
   };
 
   componentDidMount() {
@@ -38,8 +42,9 @@ export default class Node extends React.Component {
   }
 
   startConnection = event => {
-    event.preventDefault();
-    this.props.onStartConnection(event.target.id);
+    if (event.button === 2) {
+      this.props.onStartConnection(event.target.id);
+    }
   };
 
   finishConnection = event => {
@@ -49,8 +54,7 @@ export default class Node extends React.Component {
   };
 
   handleTextChange = event => {
-    console.log(event.target.value);
-    // this.setState({value: event.target.value});
+    this.props.onChangeNodeData(this.props.id, { text: this.textInput.value });
   };
 
   toggleEditText = () => {
@@ -66,15 +70,22 @@ export default class Node extends React.Component {
         className="nodeElement"
         id={this.props.id}
         style={{ width: width, height: height, top: y, left: x }}
-        onContextMenu={this.startConnection}
+        onContextMenu={e => e.preventDefault()}
+        // onContextMenu={this.startConnection}
+        onMouseDown={this.startConnection}
         onMouseUp={this.finishConnection}
       >
         {this.state.isEditText ? (
           <input
             type="text"
-            value={text}
-            onBlur={this.toggleEditText}
-            onChange={this.handleTextChange}
+            // value={text}
+            defaultValue={text}
+            ref={ref => (this.textInput = ref)}
+            onBlur={() => {
+              this.handleTextChange();
+              this.toggleEditText();
+            }}
+            // onChange={this.handleTextChange}
             autoFocus
           />
         ) : (

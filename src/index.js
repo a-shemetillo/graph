@@ -11,7 +11,6 @@ class App extends React.Component {
     super(props);
     this.state = {
       graph: {},
-      elements: [],
       jsPlumbInstance: jsPlumb.getInstance(),
       connection: {
         left: '',
@@ -32,7 +31,6 @@ class App extends React.Component {
     const graph = this.state.graph;
     graph.node(nodeData);
     this.setState({ graph });
-    // return {elements: [...prevState.elements, {x: event.clientX, y: event.clientY, width: 125, height: 60, text: 'Text'}]};
   };
 
   async componentDidMount() {
@@ -41,7 +39,6 @@ class App extends React.Component {
   }
 
   handleStartConnection = nodeId => {
-    console.log('init');
     this.setState(prevState => {
       return {
         connection: { ...prevState.connection, left: nodeId }
@@ -50,9 +47,7 @@ class App extends React.Component {
   };
 
   handleFinishConnection = nodeId => {
-    console.log('finish', this.state.connection.left);
     if (this.state.connection.left) {
-      console.log(555);
       this.setState(prevState => {
         return {
           connection: { ...prevState.connection, right: nodeId }
@@ -61,16 +56,26 @@ class App extends React.Component {
     }
   };
 
-  // componentDidUpdate(prevProps, prevState) {
-  //   console.log(prevState.connection);
-  //   // only update if you create connection between nodes
-  //   if (prevState.connection.right !== this.state.connection.right) {
-  //     this.createConnection();
-  //   }
-  // }
+  handleChangeNodeData = (id, dataToChange) => {
+    this.setState(prevState => {
+      const nodes = prevState.graph.nodes;
+      nodes[id].data = { ...nodes[id].data, ...dataToChange };
+      return {
+        graph: prevState.graph
+      };
+    });
+  };
+
+  componentDidUpdate(prevProps, prevState) {
+    console.log('update');
+    // console.log(prevState.connection);
+    // // only update if you create connection between nodes
+    // if (prevState.connection.right !== this.state.connection.right) {
+    //   this.createConnection();
+    // }
+  }
 
   createConnection = () => {
-    console.log(444);
     const graph = this.state.graph;
     graph.edge(
       graph.nodes[this.state.connection.left],
@@ -100,6 +105,7 @@ class App extends React.Component {
                 data={element.data}
                 onStartConnection={this.handleStartConnection}
                 onFinishConnection={this.handleFinishConnection}
+                onChangeNodeData={this.handleChangeNodeData}
               />
             );
           })}
