@@ -2,9 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import { jsPlumb } from 'jsplumb';
-import { Graph } from 'data-net';
 import GraphApi from './api/graph';
 import Node from './node';
+import Edge from './edge';
 
 class App extends React.Component {
   constructor(props) {
@@ -20,7 +20,6 @@ class App extends React.Component {
   }
 
   handleDoubleClick = event => {
-    event.persist();
     const nodeData = {
       x: event.clientX,
       y: event.clientY,
@@ -34,23 +33,26 @@ class App extends React.Component {
   };
 
   async componentDidMount() {
-    const graphData = await GraphApi.getGraph();
-    this.setState({ graph: Graph.create(graphData) });
+    const graph = await GraphApi.getGraph();
+    window.g = graph;
+    this.setState({ graph });
   }
 
-  handleStartConnection = nodeId => {
+  handleStartConnection = node => {
+    console.log(node._id);
     this.setState(prevState => {
       return {
-        connection: { ...prevState.connection, left: nodeId }
+        connection: { from: node }
       };
     });
   };
 
-  handleFinishConnection = nodeId => {
-    if (this.state.connection.left) {
+  handleFinishConnection = node => {
+    console.log(node._id);
+    if (this.state.connection) {
       this.setState(prevState => {
         return {
-          connection: { ...prevState.connection, right: nodeId }
+          connection: { ...prevState.connection, to: node }
         };
       }, this.createConnection);
     }
@@ -77,39 +79,30 @@ class App extends React.Component {
 
   createConnection = () => {
     const graph = this.state.graph;
-    graph.edge(
-      graph.nodes[this.state.connection.left],
-      graph.nodes[this.state.connection.right]
-    );
-    this.setState({ graph });
-
-    this.state.jsPlumbInstance.connect({
-      source: this.state.connection.left.toString(),
-      target: this.state.connection.right.toString(),
-      paintStyle: { strokeWidth: 8, stroke: 'rgb(189,11,11)' },
-      anchors: ['Bottom', 'Top'],
-      endpoint: 'Rectangle'
-    });
+    graph.edge(this.state.connection.from, this.state.connection.to);
+    this.setState({ graph, connection: null });
   };
 
   render() {
     return (
-      <div className="container" onDoubleClick={this.handleDoubleClick}>
-        {this.state.graph.nodes &&
-          this.state.graph.nodes.length > 0 &&
-          this.state.graph.nodes.map((element, index) => {
+      <svg className="container" onDoubleClick={this.handleDoubleClick}>
+        {this.state.graph.edges &&
+          this.state.graph.edges.map(edge => {
+            return <Edge key={edge._id} edge={edge} />;
+          })}
+        {this.state.graph.edges &&
+          this.state.graph.nodes.map(node => {
             return (
               <Node
-                key={index}
-                id={index}
-                data={element.data}
+                key={node._id}
+                node={node}
                 onStartConnection={this.handleStartConnection}
                 onFinishConnection={this.handleFinishConnection}
                 onChangeNodeData={this.handleChangeNodeData}
               />
             );
           })}
-      </div>
+      </svg>
     );
   }
 }

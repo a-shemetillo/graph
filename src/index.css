@@ -1,6 +1,7 @@
 body {
-  font: 14px "Century Gothic", Futura, sans-serif;
+  font: 14px 'Century Gothic', Futura, sans-serif;
   /*margin: 20px;*/
+  margin: 0;
 }
 
 .container {
@@ -19,18 +20,18 @@ body {
   padding: 5px;
 }
 
-.nodeElement input{
+.nodeElement input {
   max-width: 100%;
 }
 
-
-ol, ul {
+ol,
+ul {
   padding-left: 30px;
 }
 
 .board-row:after {
   clear: both;
-  content: "";
+  content: '';
   display: table;
 }
 
