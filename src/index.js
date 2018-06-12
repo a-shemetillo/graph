@@ -1,26 +1,20 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import { jsPlumb } from 'jsplumb';
-import { Graph } from 'data-net';
 import GraphApi from './api/graph';
 import Node from './node';
+import Edge from './edge';
 
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      graph: {},
-      jsPlumbInstance: jsPlumb.getInstance(),
-      connection: {
-        left: '',
-        right: ''
-      }
-    };
+    this.containerRef = React.createRef();
+    this.state = {};
   }
 
   handleDoubleClick = event => {
     event.persist();
+    if (event.target !== this.containerRef.current) return;
     const nodeData = {
       x: event.clientX,
       y: event.clientY,
@@ -30,29 +24,50 @@ class App extends React.Component {
     };
     const graph = this.state.graph;
     graph.node(nodeData);
-    this.setState({ graph });
+    this.setState({});
+  };
+
+  handleMouseMove = event => {
+    event.persist();
+    if (this.state.dragging) {
+      this.setState(prevState => {
+        const node = this.state.dragging.node;
+        node.data.x = event.clientX - prevState.dragging.offsetX;
+        node.data.y = event.clientY - prevState.dragging.offsetY;
+        return {};
+      });
+    }
+    if (this.state.connection) {
+      this.setState({
+        connection: {
+          ...this.state.connection,
+          x: event.clientX,
+          y: event.clientY
+        }
+      });
+    }
   };
 
   async componentDidMount() {
-    const graphData = await GraphApi.getGraph();
-    this.setState({ graph: Graph.create(graphData) });
+    const graph = await GraphApi.getGraph();
+    window.g = graph;
+    this.setState({ graph });
   }
 
-  handleStartConnection = nodeId => {
-    this.setState(prevState => {
-      return {
-        connection: { ...prevState.connection, left: nodeId }
-      };
+  handleStartConnection = node => {
+    console.log('from', node._id);
+    this.setState({
+      connection: { from: node, x: node.data.x, y: node.data.y }
     });
   };
 
-  handleFinishConnection = nodeId => {
-    if (this.state.connection.left) {
+  handleFinishConnection = node => {
+    if (this.state.connection && this.state.connection.from !== node) {
+      console.log('to', node._id);
       this.setState(prevState => {
-        return {
-          connection: { ...prevState.connection, right: nodeId }
-        };
-      }, this.createConnection);
+        this.state.graph.edge(this.state.connection.from, node);
+        return { connection: null };
+      });
     }
   };
 
@@ -68,47 +83,84 @@ class App extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     console.log('update');
-    // console.log(prevState.connection);
-    // // only update if you create connection between nodes
-    // if (prevState.connection.right !== this.state.connection.right) {
-    //   this.createConnection();
-    // }
   }
 
-  createConnection = () => {
-    const graph = this.state.graph;
-    graph.edge(
-      graph.nodes[this.state.connection.left],
-      graph.nodes[this.state.connection.right]
-    );
-    this.setState({ graph });
+  handleStartDrag = dragStartData => {
+    this.setState({ dragging: dragStartData });
+  };
 
-    this.state.jsPlumbInstance.connect({
-      source: this.state.connection.left.toString(),
-      target: this.state.connection.right.toString(),
-      paintStyle: { strokeWidth: 8, stroke: 'rgb(189,11,11)' },
-      anchors: ['Bottom', 'Top'],
-      endpoint: 'Rectangle'
+  handleMouseUp = () => {
+    (this.state.dragging || this.state.connection || this.state.editing) &&
+      this.setState({ dragging: null, connection: null, editing: null });
+  };
+
+  handleStartEditNode = node => {
+    this.setState({ editing: { node } });
+  };
+
+  handleEditNode = event => {
+    event.persist();
+    this.setState(prevState => {
+      prevState.editing.node.data.text = event.target.value;
+      return {};
     });
   };
 
   render() {
     return (
-      <div className="container" onDoubleClick={this.handleDoubleClick}>
-        {this.state.graph.nodes &&
-          this.state.graph.nodes.length > 0 &&
-          this.state.graph.nodes.map((element, index) => {
-            return (
-              <Node
-                key={index}
-                id={index}
-                data={element.data}
-                onStartConnection={this.handleStartConnection}
-                onFinishConnection={this.handleFinishConnection}
-                onChangeNodeData={this.handleChangeNodeData}
-              />
-            );
-          })}
+      <div>
+        <svg
+          ref={this.containerRef}
+          className="container"
+          onDoubleClick={this.handleDoubleClick}
+          onMouseMove={this.handleMouseMove}
+          onMouseUp={this.handleMouseUp}
+        >
+          {this.state.graph &&
+            this.state.graph.edges &&
+            this.state.graph.edges.map(edge => {
+              return <Edge key={edge._id} edge={edge} />;
+            })}
+          {this.state.graph &&
+            this.state.graph.edges &&
+            this.state.graph.nodes.map(node => {
+              return (
+                <Node
+                  key={node._id}
+                  node={node}
+                  onStartConnection={this.handleStartConnection}
+                  onFinishConnection={this.handleFinishConnection}
+                  onChangeNodeData={this.handleChangeNodeData}
+                  onStartDrag={this.handleStartDrag}
+                  onStartEdit={this.handleStartEditNode}
+                />
+              );
+            })}
+          {this.state.connection && (
+            <line
+              className="edgeElement"
+              x1={this.state.connection.from.data.x}
+              y1={this.state.connection.from.data.y}
+              x2={this.state.connection.x + 20}
+              y2={this.state.connection.y + 20}
+              fill="#ffb"
+              stroke="black"
+              strokeWidth="3px"
+            />
+          )}
+        </svg>
+        {this.state.editing && (
+          <input
+            type="text"
+            value={this.state.editing.node.data.text}
+            style={{
+              position: 'absolute',
+              left: this.state.editing.node.data.x,
+              top: this.state.editing.node.data.y
+            }}
+            onChange={this.handleEditNode}
+          />
+        )}
       </div>
     );
   }
