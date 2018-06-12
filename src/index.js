@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import { jsPlumb } from 'jsplumb';
 import GraphApi from './api/graph';
 import Node from './node';
 import Edge from './edge';
@@ -9,17 +8,13 @@ import Edge from './edge';
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      graph: {},
-      jsPlumbInstance: jsPlumb.getInstance(),
-      connection: {
-        left: '',
-        right: ''
-      }
-    };
+    this.containerRef = React.createRef();
+    this.state = {};
   }
 
   handleDoubleClick = event => {
+    event.persist();
+    if (event.target !== this.containerRef.current) return;
     const nodeData = {
       x: event.clientX,
       y: event.clientY,
@@ -29,7 +24,28 @@ class App extends React.Component {
     };
     const graph = this.state.graph;
     graph.node(nodeData);
-    this.setState({ graph });
+    this.setState({});
+  };
+
+  handleMouseMove = event => {
+    event.persist();
+    if (this.state.dragging) {
+      this.setState(prevState => {
+        const node = this.state.dragging.node;
+        node.data.x = event.clientX - prevState.dragging.offsetX;
+        node.data.y = event.clientY - prevState.dragging.offsetY;
+        return {};
+      });
+    }
+    if (this.state.connection) {
+      this.setState({
+        connection: {
+          ...this.state.connection,
+          x: event.clientX,
+          y: event.clientY
+        }
+      });
+    }
   };
 
   async componentDidMount() {
@@ -39,22 +55,19 @@ class App extends React.Component {
   }
 
   handleStartConnection = node => {
-    console.log(node._id);
-    this.setState(prevState => {
-      return {
-        connection: { from: node }
-      };
+    console.log('from', node._id);
+    this.setState({
+      connection: { from: node, x: node.data.x, y: node.data.y }
     });
   };
 
   handleFinishConnection = node => {
-    console.log(node._id);
-    if (this.state.connection) {
+    if (this.state.connection && this.state.connection.from !== node) {
+      console.log('to', node._id);
       this.setState(prevState => {
-        return {
-          connection: { ...prevState.connection, to: node }
-        };
-      }, this.createConnection);
+        this.state.graph.edge(this.state.connection.from, node);
+        return { connection: null };
+      });
     }
   };
 
@@ -70,39 +83,85 @@ class App extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     console.log('update');
-    // console.log(prevState.connection);
-    // // only update if you create connection between nodes
-    // if (prevState.connection.right !== this.state.connection.right) {
-    //   this.createConnection();
-    // }
   }
 
-  createConnection = () => {
-    const graph = this.state.graph;
-    graph.edge(this.state.connection.from, this.state.connection.to);
-    this.setState({ graph, connection: null });
+  handleStartDrag = dragStartData => {
+    this.setState({ dragging: dragStartData });
+  };
+
+  handleMouseUp = () => {
+    (this.state.dragging || this.state.connection || this.state.editing) &&
+      this.setState({ dragging: null, connection: null, editing: null });
+  };
+
+  handleStartEditNode = node => {
+    this.setState({ editing: { node } });
+  };
+
+  handleEditNode = event => {
+    event.persist();
+    this.setState(prevState => {
+      prevState.editing.node.data.text = event.target.value;
+      return {};
+    });
   };
 
   render() {
     return (
-      <svg className="container" onDoubleClick={this.handleDoubleClick}>
-        {this.state.graph.edges &&
-          this.state.graph.edges.map(edge => {
-            return <Edge key={edge._id} edge={edge} />;
-          })}
-        {this.state.graph.edges &&
-          this.state.graph.nodes.map(node => {
-            return (
-              <Node
-                key={node._id}
-                node={node}
-                onStartConnection={this.handleStartConnection}
-                onFinishConnection={this.handleFinishConnection}
-                onChangeNodeData={this.handleChangeNodeData}
-              />
-            );
-          })}
-      </svg>
+      <div>
+        <svg
+          ref={this.containerRef}
+          className="container"
+          onDoubleClick={this.handleDoubleClick}
+          onMouseMove={this.handleMouseMove}
+          onMouseUp={this.handleMouseUp}
+        >
+          {this.state.graph &&
+            this.state.graph.edges &&
+            this.state.graph.edges.map(edge => {
+              return <Edge key={edge._id} edge={edge} />;
+            })}
+          {this.state.graph &&
+            this.state.graph.edges &&
+            this.state.graph.nodes.map(node => {
+              return (
+                <Node
+                  key={node._id}
+                  node={node}
+                  onStartConnection={this.handleStartConnection}
+                  onFinishConnection={this.handleFinishConnection}
+                  onChangeNodeData={this.handleChangeNodeData}
+                  onStartDrag={this.handleStartDrag}
+                  onStartEdit={this.handleStartEditNode}
+                />
+              );
+            })}
+          {this.state.connection && (
+            <line
+              className="edgeElement"
+              x1={this.state.connection.from.data.x}
+              y1={this.state.connection.from.data.y}
+              x2={this.state.connection.x + 20}
+              y2={this.state.connection.y + 20}
+              fill="#ffb"
+              stroke="black"
+              strokeWidth="3px"
+            />
+          )}
+        </svg>
+        {this.state.editing && (
+          <input
+            type="text"
+            value={this.state.editing.node.data.text}
+            style={{
+              position: 'absolute',
+              left: this.state.editing.node.data.x,
+              top: this.state.editing.node.data.y
+            }}
+            onChange={this.handleEditNode}
+          />
+        )}
+      </div>
     );
   }
 }

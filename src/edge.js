@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default class Node extends React.Component {
+export default class Edge extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -9,7 +9,6 @@ export default class Node extends React.Component {
   }
 
   render() {
-    console.log(this.props.edge.from.data.x);
     return (
       <line
         className="edgeElement"
@@ -20,9 +19,6 @@ export default class Node extends React.Component {
         fill="#ffb"
         stroke="black"
         strokeWidth="2px"
-        onContextMenu={e => e.preventDefault()}
-        onMouseDown={this.startConnection}
-        onMouseUp={this.finishConnection}
       />
     );
   }

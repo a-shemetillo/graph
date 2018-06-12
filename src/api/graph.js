@@ -17,8 +17,20 @@ export default class GraphApi {
 
 function makeDummyGraph() {
   const graph = Graph.create();
-  const n1 = graph.node({ x: 200, y: 200, width: 200, height: 80 });
-  const n2 = graph.node({ x: 500, y: 600, width: 200, height: 80 });
+  const n1 = graph.node({
+    x: 200,
+    y: 200,
+    width: 200,
+    height: 80,
+    text: 'abc'
+  });
+  const n2 = graph.node({
+    x: 500,
+    y: 600,
+    width: 200,
+    height: 80,
+    text: '123'
+  });
   graph.edge(n1, n2);
   return graph;
 }
