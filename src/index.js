@@ -2,15 +2,18 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import { jsPlumb } from 'jsplumb';
-import { Graph } from 'data-net';
-import GraphApi from './api/graph';
+// import { Graph } from 'data-net';
+// import GraphApi from './api/graph';
 import Node from './node';
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      graph: {},
+      customGraph: {
+        nodes: [],
+        edges: []
+      },
       jsPlumbInstance: jsPlumb.getInstance(),
       connection: {
         left: '',
@@ -28,14 +31,15 @@ class App extends React.Component {
       height: 60,
       text: 'Text'
     };
-    const graph = this.state.graph;
-    graph.node(nodeData);
-    this.setState({ graph });
+    this.setState((prevState) => {
+      return { customGraph: {...prevState.customGraph, nodes: [...prevState.customGraph.nodes, nodeData]}}
+      }
+    )
   };
 
   async componentDidMount() {
-    const graphData = await GraphApi.getGraph();
-    this.setState({ graph: Graph.create(graphData) });
+    // const graphData = await GraphApi.getGraph();
+    // this.setState({ graph: graphData});
   }
 
   handleStartConnection = nodeId => {
@@ -57,52 +61,54 @@ class App extends React.Component {
   };
 
   handleChangeNodeData = (id, dataToChange) => {
-    this.setState(prevState => {
-      const nodes = prevState.graph.nodes;
-      nodes[id].data = { ...nodes[id].data, ...dataToChange };
-      return {
-        graph: prevState.graph
-      };
-    });
+    this.setState((prevState) => {
+        return { customGraph: {...prevState.customGraph, nodes: [...prevState.customGraph.nodes.slice(0, id), { ...prevState.customGraph.nodes[id], ...dataToChange }, ...prevState.customGraph.nodes.slice(id + 1)]}}
+      }
+    );
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    console.log('update');
-    // console.log(prevState.connection);
-    // // only update if you create connection between nodes
-    // if (prevState.connection.right !== this.state.connection.right) {
-    //   this.createConnection();
-    // }
+  async componentDidUpdate(prevProps, prevState) {
+    if (prevState.customGraph !== this.state.customGraph) {
+      // const response = await GraphApi.saveGraph();
+      console.log('update');
+    }
   }
 
   createConnection = () => {
-    const graph = this.state.graph;
-    graph.edge(
-      graph.nodes[this.state.connection.left],
-      graph.nodes[this.state.connection.right]
+    this.setState((prevState) => {
+        return { customGraph: {...prevState.customGraph, edges: [...prevState.customGraph.edges, {from: this.state.connection.left, to: this.state.connection.right}]}}
+      }
     );
-    this.setState({ graph });
-
-    this.state.jsPlumbInstance.connect({
-      source: this.state.connection.left.toString(),
-      target: this.state.connection.right.toString(),
-      paintStyle: { strokeWidth: 8, stroke: 'rgb(189,11,11)' },
-      anchors: ['Bottom', 'Top'],
-      endpoint: 'Rectangle'
-    });
   };
 
   render() {
+
+    if(this.state.customGraph.edges.length) {
+      this.state.customGraph.edges.forEach((edge) => {
+        this.state.jsPlumbInstance.connect({
+          source: edge.from,
+          target: edge.to,
+          reattach:true,
+          paintStyle: { strokeWidth: 8, stroke: 'rgb(189,11,11)' },
+          anchors: ['Bottom', 'Top'],
+          endpoint: 'Rectangle'
+        });
+
+        // this.state.jsPlumbInstance.addEndpoint(edge.from, { isSource:true });
+      });
+
+    }
+
     return (
       <div className="container" onDoubleClick={this.handleDoubleClick}>
-        {this.state.graph.nodes &&
-          this.state.graph.nodes.length > 0 &&
-          this.state.graph.nodes.map((element, index) => {
+        {this.state.customGraph.nodes &&
+          this.state.customGraph.nodes.length > 0 &&
+          this.state.customGraph.nodes.map((element, index) => {
             return (
               <Node
                 key={index}
                 id={index}
-                data={element.data}
+                data={element}
                 onStartConnection={this.handleStartConnection}
                 onFinishConnection={this.handleFinishConnection}
                 onChangeNodeData={this.handleChangeNodeData}

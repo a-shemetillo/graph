@@ -1,5 +1,9 @@
 body {
   font: 14px "Century Gothic", Futura, sans-serif;
+
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
   /*margin: 20px;*/
 }
 

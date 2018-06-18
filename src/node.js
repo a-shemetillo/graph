@@ -63,8 +63,10 @@ export default class Node extends React.Component {
     });
   };
 
+
   render() {
     const { x, y, width, height, text } = this.props.data;
+
     return (
       <div
         className="nodeElement"
