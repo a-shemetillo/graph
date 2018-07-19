@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import GraphApi from './api/graph';
+import GraphApi from './api/graph-api';
 import Node from './node';
 import Edge from './edge';
 
@@ -94,6 +94,15 @@ class App extends React.Component {
       this.setState({ dragging: null, connection: null, editing: null });
   };
 
+  handleKeyDown = event => {
+    let charCode = String.fromCharCode(event.which).toLowerCase();
+    if (event.ctrlKey && charCode === 's') {
+      event.preventDefault();
+      console.log('Ctrl + S pressed');
+      GraphApi.saveGraph(this.state.graph);
+    }
+  };
+
   handleStartEditNode = node => {
     this.setState({ editing: { node } });
   };
@@ -115,6 +124,8 @@ class App extends React.Component {
           onDoubleClick={this.handleDoubleClick}
           onMouseMove={this.handleMouseMove}
           onMouseUp={this.handleMouseUp}
+          onKeyDown={this.handleKeyDown}
+          tabIndex="0"
         >
           {this.state.graph &&
             this.state.graph.edges &&
