@@ -2,9 +2,6 @@
   "name": "graph",
   "version": "0.1.0",
   "private": true,
-  "engines": {
-    "node": "10.6.0"
-  },
   "dependencies": {
     "data-net": "git+https://github.com/grabantot/data-net#eventful",
     "husky": "^0.14.3",
