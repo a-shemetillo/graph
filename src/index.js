@@ -130,14 +130,14 @@ class App extends React.Component {
           {this.state.graph &&
             this.state.graph.edges &&
             this.state.graph.edges.map(edge => {
-              return <Edge key={edge._id} edge={edge} />;
+              return <Edge key={edge.id} edge={edge} />;
             })}
           {this.state.graph &&
             this.state.graph.edges &&
             this.state.graph.nodes.map(node => {
               return (
                 <Node
-                  key={node._id}
+                  key={node.id}
                   node={node}
                   onStartConnection={this.handleStartConnection}
                   onFinishConnection={this.handleFinishConnection}
