@@ -1,9 +1,6 @@
 import { Graph } from 'data-net';
 
-const apiUrl =
-  process.env.REACT_APP_API_URL ||
-  'https://shielded-cove-66557.herokuapp.com' ||
-  'http://localhost';
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 console.log('api url:', apiUrl);
 
 export default class GraphApi {

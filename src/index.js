@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import GraphApi from './api/graph-api';
+import GraphApi from './api/graph.api';
 import Node from './node';
 import Edge from './edge';
 
