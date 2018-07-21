@@ -9,12 +9,16 @@ export default class Node extends React.Component {
   }
 
   handleMouseDown = event => {
+    event.stopPropagation()
     if (event.button === 2) {
       this.props.onStartConnection(this.props.node)
     } else {
+      console.log(this.props.node.data.x, this.props.node.data.y)
       this.props.onStartDrag({
-        offsetX: event.clientX - this.props.node.data.x,
-        offsetY: event.clientY - this.props.node.data.y,
+        offsetX: event.clientX,
+        offsetY: event.clientY,
+        initialX: this.props.node.data.x,
+        initialY: this.props.node.data.y,
         node: this.props.node,
       })
     }

@@ -5,11 +5,18 @@ import GraphApi from './api/graph.api'
 import Node from './node'
 import Edge from './edge'
 
+function mapPoint(point, scale, translation) {
+
+}
+
 class App extends React.Component {
   constructor(props) {
     super(props)
     this.containerRef = React.createRef()
-    this.state = {}
+    this.state = {
+      translate: {x: 0, y: 0},
+      scale: 0.8
+    }
   }
 
   handleDoubleClick = event => {
@@ -29,21 +36,37 @@ class App extends React.Component {
 
   handleMouseMove = event => {
     event.persist()
+    event.preventDefault()
     if (this.state.dragging) {
+      const pScreen = {
+        x: event.clientX - this.state.dragging.offsetX,
+        y: event.clientY - this.state.dragging.offsetY
+      }
+      console.log(pScreen)
+      const pWorld = this.scaleScreenToWorld(pScreen)
+      console.log(pWorld.x + this.state.dragging.initialX, pWorld.y + this.state.dragging.initialY)
       this.setState(prevState => {
         const node = this.state.dragging.node
-        node.data.x = event.clientX - prevState.dragging.offsetX
-        node.data.y = event.clientY - prevState.dragging.offsetY
+        node.data.x = pWorld.x + this.state.dragging.initialX
+        node.data.y = pWorld.y + this.state.dragging.initialY
         return {}
       })
     }
     if (this.state.connection) {
+      const pScreen = {x: event.clientX, y: event.clientY}
+      const pWorld = this.mapScreenToWorld(pScreen)
       this.setState({
         connection: {
           ...this.state.connection,
-          x: event.clientX,
-          y: event.clientY,
+          ...pWorld,
         },
+      })
+    }
+    if (this.state.translating) {
+      const x = this.state.translating.initialX + event.clientX - this.state.translating.offsetX
+      const y = this.state.translating.initialY + event.clientY - this.state.translating.offsetY
+      this.setState({
+        translate: {x, y}
       })
     }
   };
@@ -89,10 +112,43 @@ class App extends React.Component {
     this.setState({ dragging: dragStartData })
   };
 
+  scaleScreenToWorld = ({x, y}) => {
+    x = x / this.state.scale
+    y = y / this.state.scale
+    return {x, y}
+  }
+
+  mapScreenToWorld = ({x, y}) => {
+    x = (x - this.state.translate.x) / this.state.scale
+    y = (y - this.state.translate.y) / this.state.scale
+    return {x, y}
+  }
+
+  mapWorldToScreen = ({x, y}) => {
+    x = x * this.state.scale + this.state.translate.x
+    y = y * this.state.scale + this.state.translate.y
+    return {x, y}
+  }
+
+  handleMouseDown = (event) => {
+    const pScreen = {x: event.clientX, y: event.clientY}
+    const pWorld = this.mapScreenToWorld(pScreen)
+    console.log('mouse down', pScreen, pWorld)
+    if (event.button !== 0) return
+    this.setState({
+      translating: {
+        offsetX: event.clientX,
+        offsetY: event.clientY,
+        initialX: this.state.translate.x,
+        initialY: this.state.translate.y,
+      }
+    })
+  }
+
   handleMouseUp = () => {
-    (this.state.dragging || this.state.connection || this.state.editing) &&
-      this.setState({ dragging: null, connection: null, editing: null })
-  };
+    (this.state.dragging || this.state.connection || this.state.editing || this.state.translating) &&
+      this.setState({ dragging: null, connection: null, editing: null, translating: null })
+  }
 
   handleKeyDown = event => {
     let charCode = String.fromCharCode(event.which).toLowerCase()
@@ -116,6 +172,20 @@ class App extends React.Component {
   };
 
   render() {
+    let editBox = false
+    if (this.state.editing) {
+      const {x, y} = this.mapWorldToScreen(this.state.editing.node.data)
+      editBox = <input
+        type="text"
+        value={this.state.editing.node.data.text}
+        style={{
+          position: 'absolute',
+          left: x,
+          top: y,
+        }}
+        onChange={this.handleEditNode}
+      />
+    }
     return (
       <div className="container">
         <svg
@@ -123,55 +193,57 @@ class App extends React.Component {
           className="graph"
           onDoubleClick={this.handleDoubleClick}
           onMouseMove={this.handleMouseMove}
+          onMouseDown={this.handleMouseDown}
           onMouseUp={this.handleMouseUp}
           onKeyDown={this.handleKeyDown}
           tabIndex="0"
         >
-          {this.state.graph &&
-            this.state.graph.edges &&
-            this.state.graph.edges.map(edge => {
-              return <Edge key={edge.id} edge={edge} />
-            })}
-          {this.state.graph &&
-            this.state.graph.edges &&
-            this.state.graph.nodes.map(node => {
-              return (
-                <Node
-                  key={node.id}
-                  node={node}
-                  onStartConnection={this.handleStartConnection}
-                  onFinishConnection={this.handleFinishConnection}
-                  onChangeNodeData={this.handleChangeNodeData}
-                  onStartDrag={this.handleStartDrag}
-                  onStartEdit={this.handleStartEditNode}
+          <g
+            transform={`translate(${this.state.translate.x},${this.state.translate.y}) scale(${this.state.scale})`}
+          >
+            {
+              this.state.graph &&
+              this.state.graph.edges &&
+              this.state.graph.edges.map(edge => {
+                return <Edge key={edge.id} edge={edge} />
+              })
+            }
+            {
+              this.state.graph &&
+              this.state.graph.edges &&
+              this.state.graph.nodes.map(node => {
+                return (
+                  <Node
+                    key={node.id}
+                    node={node}
+                    onStartConnection={this.handleStartConnection}
+                    onFinishConnection={this.handleFinishConnection}
+                    onChangeNodeData={this.handleChangeNodeData}
+                    onStartDrag={this.handleStartDrag}
+                    onStartEdit={this.handleStartEditNode}
+                  />
+                )
+              })
+            }
+            {
+              this.state.connection && (
+                <line
+                  className="edgeElement"
+                  x1={this.state.connection.from.data.x}
+                  y1={this.state.connection.from.data.y}
+                  x2={this.state.connection.x + 20}
+                  y2={this.state.connection.y + 20}
+                  fill="#ffb"
+                  stroke="black"
+                  strokeWidth="3px"
                 />
               )
-            })}
-          {this.state.connection && (
-            <line
-              className="edgeElement"
-              x1={this.state.connection.from.data.x}
-              y1={this.state.connection.from.data.y}
-              x2={this.state.connection.x + 20}
-              y2={this.state.connection.y + 20}
-              fill="#ffb"
-              stroke="black"
-              strokeWidth="3px"
-            />
-          )}
+            }
+          </g>
         </svg>
-        {this.state.editing && (
-          <input
-            type="text"
-            value={this.state.editing.node.data.text}
-            style={{
-              position: 'absolute',
-              left: this.state.editing.node.data.x,
-              top: this.state.editing.node.data.y,
-            }}
-            onChange={this.handleEditNode}
-          />
-        )}
+        {
+          editBox
+        }
       </div>
     )
   }
