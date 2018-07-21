@@ -18,9 +18,9 @@ class App extends React.Component {
   handleDoubleClick = event => {
     event.persist()
     if (event.target !== this.containerRef.current) return
+    const pos = this.mapScreenToWorld({x: event.clientX, y: event.clientY})
     const nodeData = {
-      x: event.clientX,
-      y: event.clientY,
+      ...pos,
       width: 125,
       height: 60,
       text: 'Text',
