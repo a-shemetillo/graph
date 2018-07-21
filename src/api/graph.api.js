@@ -3,14 +3,17 @@ import { Graph } from 'data-net'
 const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080'
 const standalone = process.env.REACT_APP_STANDALONE === 'true'
 
-if (standalone) console.log('runnig in standalone mode - no backend')
+if (standalone) console.log('runnig in standalone (no backend) mode')
 else console.log('api url:', apiUrl)
+
+const getGraphName = () => window.location.pathname.substr(1) || '/'
 
 export default class GraphApi {
   static async getGraph() {
     if (standalone) return makeDummyGraph()
-    console.log('opening')
-    const url = `${apiUrl}/graph`
+    const graphName = getGraphName()
+    console.log('opening', graphName)
+    const url = `${apiUrl}/graph/${encodeURIComponent(graphName)}`
     const response = await fetch(url)
     const json = await response.json()
     const graph = Graph.create(json.graph)
@@ -19,8 +22,9 @@ export default class GraphApi {
   }
 
   static async saveGraph(graph) {
-    const url = `${apiUrl}/graph`
-    console.log('saving')
+    const graphName = getGraphName()
+    console.log('saving', graphName)
+    const url = `${apiUrl}/graph/${encodeURIComponent(graphName)}`
     const response = await fetch(url, {
       method: 'POST',
       headers: {
