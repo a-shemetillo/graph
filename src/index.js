@@ -117,10 +117,10 @@ class App extends React.Component {
 
   render() {
     return (
-      <div>
+      <div className="container">
         <svg
           ref={this.containerRef}
-          className="container"
+          className="graph"
           onDoubleClick={this.handleDoubleClick}
           onMouseMove={this.handleMouseMove}
           onMouseUp={this.handleMouseUp}
