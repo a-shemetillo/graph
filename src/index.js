@@ -5,10 +5,6 @@ import GraphApi from './api/graph.api'
 import Node from './node'
 import Edge from './edge'
 
-function mapPoint(point, scale, translation) {
-
-}
-
 class App extends React.Component {
   constructor(props) {
     super(props)
@@ -112,21 +108,21 @@ class App extends React.Component {
     this.setState({ dragging: dragStartData })
   };
 
-  scaleScreenToWorld = ({x, y}) => {
-    x = x / this.state.scale
-    y = y / this.state.scale
+  scaleScreenToWorld = ({x, y}, scale = this.state.scale) => {
+    x = x / scale
+    y = y / scale
     return {x, y}
   }
 
-  mapScreenToWorld = ({x, y}) => {
-    x = (x - this.state.translate.x) / this.state.scale
-    y = (y - this.state.translate.y) / this.state.scale
+  mapScreenToWorld = ({x, y}, scale = this.state.scale) => {
+    x = (x - this.state.translate.x) / scale
+    y = (y - this.state.translate.y) / scale
     return {x, y}
   }
 
-  mapWorldToScreen = ({x, y}) => {
-    x = x * this.state.scale + this.state.translate.x
-    y = y * this.state.scale + this.state.translate.y
+  mapWorldToScreen = ({x, y}, scale = this.state.scale) => {
+    x = x * scale + this.state.translate.x
+    y = y * scale + this.state.translate.y
     return {x, y}
   }
 
@@ -151,8 +147,18 @@ class App extends React.Component {
   }
 
   handleWheel = event => {
+    const zoomSensitivity = 0.002
+    const newScale = this.state.scale * (1 - zoomSensitivity * event.deltaY)
+    const zoomPoint = {x: event.clientX, y: event.clientY}
+    const zoomPointWorld = this.mapScreenToWorld(zoomPoint)
+    const pAfterZoom = this.mapWorldToScreen(zoomPointWorld, newScale)
+
     this.setState({
-      scale: this.state.scale * (1 + 0.01 * event.deltaY)
+      scale: newScale,
+      translate: {
+        x: this.state.translate.x + (zoomPoint.x - pAfterZoom.x),
+        y: this.state.translate.y + (zoomPoint.y - pAfterZoom.y),
+      }
     })
   }
 
