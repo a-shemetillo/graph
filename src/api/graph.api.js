@@ -1,54 +1,54 @@
-import { Graph } from 'data-net';
+import { Graph } from 'data-net'
 
-const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
-const standalone = process.env.REACT_APP_STANDALONE === 'true';
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080'
+const standalone = process.env.REACT_APP_STANDALONE === 'true'
 
-if (standalone) console.log('runnig in standalone mode - no backend');
-else console.log('api url:', apiUrl);
+if (standalone) console.log('runnig in standalone mode - no backend')
+else console.log('api url:', apiUrl)
 
 export default class GraphApi {
   static async getGraph() {
-    if (standalone) return makeDummyGraph();
-    console.log('opening');
-    const url = `${apiUrl}/graph`;
-    const response = await fetch(url);
-    const json = await response.json();
-    const graph = Graph.create(json.graph);
-    console.log('opened', graph.nodes.length);
-    return graph;
+    if (standalone) return makeDummyGraph()
+    console.log('opening')
+    const url = `${apiUrl}/graph`
+    const response = await fetch(url)
+    const json = await response.json()
+    const graph = Graph.create(json.graph)
+    console.log('opened', graph.nodes.length)
+    return graph
   }
 
   static async saveGraph(graph) {
-    const url = `${apiUrl}/graph`;
-    console.log('saving');
+    const url = `${apiUrl}/graph`
+    console.log('saving')
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ graph })
-    });
-    console.log('saved', response);
+      body: JSON.stringify({ graph }),
+    })
+    console.log('saved', response)
   }
 }
 
 function makeDummyGraph() {
-  const graph = Graph.create();
+  const graph = Graph.create()
   const n1 = graph.node({
     x: 200,
     y: 200,
     width: 200,
     height: 80,
-    text: 'abc'
-  });
+    text: 'abc',
+  })
   const n2 = graph.node({
     x: 500,
     y: 600,
     width: 200,
     height: 80,
-    text: '123'
-  });
-  graph.edge(n1, n2);
-  return graph;
+    text: '123',
+  })
+  graph.edge(n1, n2)
+  return graph
 }

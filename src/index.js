@@ -51,13 +51,13 @@ class App extends React.Component {
   async componentDidMount() {
     const graph = await GraphApi.getGraph()
     window.g = graph
-    this.setState({ graph, })
+    this.setState({ graph })
   }
 
   handleStartConnection = node => {
     console.log('from', node.id)
     this.setState({
-      connection: { from: node, x: node.data.x, y: node.data.y, },
+      connection: { from: node, x: node.data.x, y: node.data.y },
     })
   };
 
@@ -66,7 +66,7 @@ class App extends React.Component {
       console.log('to', node.id)
       this.setState(prevState => {
         this.state.graph.edge(this.state.connection.from, node)
-        return { connection: null, }
+        return { connection: null }
       })
     }
   };
@@ -74,7 +74,7 @@ class App extends React.Component {
   handleChangeNodeData = (id, dataToChange) => {
     this.setState(prevState => {
       const nodes = prevState.graph.nodes
-      nodes[id].data = { ...nodes[id].data, ...dataToChange, }
+      nodes[id].data = { ...nodes[id].data, ...dataToChange }
       return {
         graph: prevState.graph,
       }
@@ -86,12 +86,12 @@ class App extends React.Component {
   }
 
   handleStartDrag = dragStartData => {
-    this.setState({ dragging: dragStartData, })
+    this.setState({ dragging: dragStartData })
   };
 
   handleMouseUp = () => {
     (this.state.dragging || this.state.connection || this.state.editing) &&
-      this.setState({ dragging: null, connection: null, editing: null, })
+      this.setState({ dragging: null, connection: null, editing: null })
   };
 
   handleKeyDown = event => {
@@ -104,7 +104,7 @@ class App extends React.Component {
   };
 
   handleStartEditNode = node => {
-    this.setState({ editing: { node, }, })
+    this.setState({ editing: { node } })
   };
 
   handleEditNode = event => {

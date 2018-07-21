@@ -1,38 +1,38 @@
-import React from 'react';
+import React from 'react'
 
 export default class Node extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
-      isEditText: false
-    };
+      isEditText: false,
+    }
   }
 
   handleMouseDown = event => {
     if (event.button === 2) {
-      this.props.onStartConnection(this.props.node);
+      this.props.onStartConnection(this.props.node)
     } else {
       this.props.onStartDrag({
         offsetX: event.clientX - this.props.node.data.x,
         offsetY: event.clientY - this.props.node.data.y,
-        node: this.props.node
-      });
+        node: this.props.node,
+      })
     }
   };
 
   handleMouseUp = event => {
     if (event.button === 2) {
-      this.props.onFinishConnection(this.props.node);
+      this.props.onFinishConnection(this.props.node)
     }
   };
 
   handleDoubleClick = () => {
-    console.log('edit');
-    this.props.onStartEdit(this.props.node);
+    console.log('edit')
+    this.props.onStartEdit(this.props.node)
   };
 
   render() {
-    const data = this.props.node.data;
+    const data = this.props.node.data
     return (
       <g>
         <rect
@@ -54,6 +54,6 @@ export default class Node extends React.Component {
           {data.text}
         </text>
       </g>
-    );
+    )
   }
 }

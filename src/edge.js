@@ -1,11 +1,11 @@
-import React from 'react';
+import React from 'react'
 
 export default class Edge extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
-      isEditText: false
-    };
+      isEditText: false,
+    }
   }
 
   render() {
@@ -20,6 +20,6 @@ export default class Edge extends React.Component {
         stroke="black"
         strokeWidth="2px"
       />
-    );
+    )
   }
 }
