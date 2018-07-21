@@ -150,6 +150,12 @@ class App extends React.Component {
       this.setState({ dragging: null, connection: null, editing: null, translating: null })
   }
 
+  handleWheel = event => {
+    this.setState({
+      scale: this.state.scale * (1 + 0.01 * event.deltaY)
+    })
+  }
+
   handleKeyDown = event => {
     let charCode = String.fromCharCode(event.which).toLowerCase()
     if (event.ctrlKey && charCode === 's') {
@@ -195,6 +201,7 @@ class App extends React.Component {
           onMouseMove={this.handleMouseMove}
           onMouseDown={this.handleMouseDown}
           onMouseUp={this.handleMouseUp}
+          onWheel={this.handleWheel}
           onKeyDown={this.handleKeyDown}
           tabIndex="0"
         >
