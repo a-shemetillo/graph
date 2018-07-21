@@ -55,7 +55,7 @@ class App extends React.Component {
   }
 
   handleStartConnection = node => {
-    console.log('from', node._id);
+    console.log('from', node.id);
     this.setState({
       connection: { from: node, x: node.data.x, y: node.data.y }
     });
@@ -63,7 +63,7 @@ class App extends React.Component {
 
   handleFinishConnection = node => {
     if (this.state.connection && this.state.connection.from !== node) {
-      console.log('to', node._id);
+      console.log('to', node.id);
       this.setState(prevState => {
         this.state.graph.edge(this.state.connection.from, node);
         return { connection: null };

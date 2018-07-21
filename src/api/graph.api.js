@@ -1,11 +1,14 @@
 import { Graph } from 'data-net';
 
 const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
-console.log('api url:', apiUrl);
+const standalone = process.env.REACT_APP_STANDALONE === 'true';
+
+if (standalone) console.log('runnig in standalone mode - no backend');
+else console.log('api url:', apiUrl);
 
 export default class GraphApi {
   static async getGraph() {
-    // return makeDummyGraph();
+    if (standalone) return makeDummyGraph();
     console.log('opening');
     const url = `${apiUrl}/graph`;
     const response = await fetch(url);
