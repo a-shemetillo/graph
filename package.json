@@ -32,5 +32,9 @@
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "standalone": "REACT_APP_STANDALONE=true npm run start"
+  },
+  "devDependencies": {
+    "eslint": "^5.2.0",
+    "eslint-plugin-react": "^7.10.0"
   }
 }
