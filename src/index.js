@@ -5,13 +5,29 @@ import GraphApi from './api/graph.api'
 import Node from './node'
 import Edge from './edge'
 
+const helpText = `
+LMB double click - create node
+LMB on node and drag - move node
+
+RMB on node and drag - create edge (connection) to another node
+
+mouse wheel - zoom
+LMB on empty space and drag - pan
+
+Ctrl + S - save graph
+
+To open a graph enter its name to location bar after '/', e.g. 'http://localhost:3000/js' - will open a graph named 'js'.
+If the graph with this name doesn't exist then it will be created on save.
+`
+
 class App extends React.Component {
   constructor(props) {
     super(props)
     this.containerRef = React.createRef()
     this.state = {
       translate: {x: 0, y: 0},
-      scale: 0.8
+      scale: 0.8,
+      backgroundText: helpText
     }
   }
 
@@ -67,10 +83,21 @@ class App extends React.Component {
     }
   };
 
-  async componentDidMount() {
-    const graph = await GraphApi.getGraph()
-    window.g = graph
-    this.setState({ graph })
+  componentDidMount() {
+    this.setState({backgroundText: helpText + '\n\nOpening'})
+    GraphApi.getGraph()
+      .then(graph => {
+        window.g = graph
+        this.setState({
+          graph,
+          backgroundText: helpText + '\n\nOpened'
+        })
+      })
+      .catch(err => {
+        this.setState({
+          backgroundText: helpText + '\n\nError while opening\n' + err
+        })
+      })
   }
 
   handleStartConnection = node => {
@@ -167,7 +194,10 @@ class App extends React.Component {
     if (event.ctrlKey && charCode === 's') {
       event.preventDefault()
       console.log('Ctrl + S pressed')
+      this.setState({backgroundText: helpText + '\n\nSaving'})
       GraphApi.saveGraph(this.state.graph)
+        .then(() => this.setState({backgroundText: helpText + '\n\nSaved\n' + new Date()}))
+        .catch(err => this.setState({backgroundText: helpText + '\n\nError while saving\n' + err}))
     }
   };
 
@@ -214,6 +244,11 @@ class App extends React.Component {
           <g
             transform={`translate(${this.state.translate.x},${this.state.translate.y}) scale(${this.state.scale})`}
           >
+            <foreignObject x="30" y="0" height="500" width="500">
+              <p xmlns="http://www.w3.org/1999/xhtml"
+                style={{whiteSpace: 'pre', fontSize: '1.5rem', color: 'gray', pointerEvents: 'none'}}
+              >{this.state.backgroundText}</p>
+            </foreignObject>
             {
               this.state.graph &&
               this.state.graph.edges &&

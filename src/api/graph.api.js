@@ -3,8 +3,8 @@ import { Graph } from 'data-net'
 const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080'
 const standalone = process.env.REACT_APP_STANDALONE === 'true'
 
-if (standalone) console.log('runnig in standalone (no backend) mode')
-else console.log('api url:', apiUrl)
+if (standalone) console.log(`REACT_APP_STANDALONE=${standalone}`)
+else console.log(`REACT_APP_API_URL=${apiUrl}`)
 
 const getGraphName = () => window.location.pathname.substr(1) || '/'
 
@@ -34,6 +34,7 @@ export default class GraphApi {
       body: JSON.stringify({ graph }),
     })
     console.log('saved', response)
+    return response
   }
 }
 
